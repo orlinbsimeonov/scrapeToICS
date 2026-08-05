@@ -1,9 +1,9 @@
 name: Update events calendar
 
 on:
-  schedule:
-    # Runs every 6 hours. Adjust the cron as you like (UTC time).
-    - cron: "0 */6 * * *"
+   schedule:
+    # Runs every Wednesday at 9:00 AM Danish summer time (UTC+2)
+    - cron: "0 7 * * 3"
   workflow_dispatch: {}   # lets you trigger it manually from the Actions tab
 
 permissions:
