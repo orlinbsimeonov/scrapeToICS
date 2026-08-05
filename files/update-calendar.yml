@@ -1,0 +1,49 @@
+name: Update events calendar
+
+on:
+  schedule:
+    # Runs every 6 hours. Adjust the cron as you like (UTC time).
+    - cron: "0 */6 * * *"
+  workflow_dispatch: {}   # lets you trigger it manually from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  update-ics:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Apify actor (optional — if the actor isn't scheduled on Apify's side)
+        env:
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+        run: |
+          echo "If your Apify actor already runs on its own schedule and just
+          reuses the same dataset, you can skip triggering it here and only
+          read from the dataset below. Otherwise, call the Apify API to
+          start a run before generating the .ics file."
+
+      - name: Generate .ics file
+        env:
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+          APIFY_DATASET_ID: ${{ secrets.APIFY_DATASET_ID }}
+          ICS_OUTPUT_PATH: docs/events.ics
+        run: python scrape_to_ics.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "events-bot"
+          git config user.email "events-bot@users.noreply.github.com"
+          git add docs/events.ics
+          git diff --staged --quiet || git commit -m "Update events calendar"
+          git push
